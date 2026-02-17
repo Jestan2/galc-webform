@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.postal-code-input::placeholder {
+  color: #9ca3af !important;
+}
+
+.postal-code-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}

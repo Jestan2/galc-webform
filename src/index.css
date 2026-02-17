@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.animate-delay-150 { animation-delay: .15s; }
+.animate-delay-300 { animation-delay: .3s; }
+.animate-delay-500 { animation-delay: .5s; }
+.animate-delay-700 { animation-delay: .7s; }

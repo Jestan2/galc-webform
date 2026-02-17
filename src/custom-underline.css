@@ -1,0 +1,94 @@
+.input-underline-animate {
+  width: 100%;
+  transform: translateX(-50%) scaleX(1);
+  transition:
+    transform 0.8s cubic-bezier(0.16,1,0.3,1),
+    width 0s;
+}
+.input-underline-reset {
+  width: 0;
+  transform: translateX(-50%) scaleX(0);
+  transition:
+    transform 0.6s cubic-bezier(0.68,0,1,0.01),
+    width 0s;
+}
+input {
+  background: transparent !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  background: transparent !important;
+  color: #04193b !important;
+}
+
+/* Remove Chrome yellow autofill from Stripe Elements */
+.stripe-input input,
+.stripe-input :-webkit-autofill,
+.stripe-input :-webkit-autofill:hover,
+.stripe-input :-webkit-autofill:focus,
+.stripe-input :-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  box-shadow: 0 0 0px 1000px white inset !important;
+  background-color: white !important;
+  -webkit-text-fill-color: #04193b !important;
+}
+
+/* keep postal code input transparent and borderless */
+.stripe-input input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* apply the inset trick ONLY when the field is autofilled */
+.stripe-input input:-webkit-autofill,
+.stripe-input input:-webkit-autofill:hover,
+.stripe-input input:-webkit-autofill:focus,
+.stripe-input input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #04193b !important;
+}
+
+
+/* Textarea underline integrated animation (matches input underline timing) */
+.textarea-underline {
+  background-image: linear-gradient(#04193b, #04193b);
+  background-repeat: no-repeat;
+  background-position: 50% 100%;
+  background-size: 0 2px;
+  transition: background-size 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+
+.textarea-underline-active {
+  background-size: 100% 2px;
+}
+
+.textarea-underline-reset {
+  background-size: 0 2px;
+  transition: background-size 0.6s cubic-bezier(0.68,0,1,0.01);
+}
+
+/* Remove Chrome yellow autofill highlight */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important; /* pure white background */
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #04193b !important; /* your dark text */
+  caret-color: #04193b !important;
+  border: 1px solid #e5e7eb !important; /* match default border */
+  transition: background-color 5000s ease-in-out 0s; /* prevent flash */
+}

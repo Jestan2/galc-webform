@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- This fixes mobile scaling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#04193b" />
+
+    <!-- Suppress Console Warnings - Load First -->
+    <script>
+      // Suppress console warnings immediately, before any other scripts
+      (function() {
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const originalLog = console.log;
+        
+        function shouldSuppress(message) {
+          return message.includes('icons') ||
+                 message.includes('UTF8') ||
+                 message.includes('Each dictionary in the list') ||
+                 message.includes('should contain a non-empty') ||
+                 message.includes('Added non-passive event listener') ||
+                 message.includes('scroll-blocking') ||
+                 message.includes('hcaptcha') ||
+                 message.includes('non-passive') ||
+                 message.includes('google.maps.places.AutocompleteService') ||
+                 message.includes('As of March 1st, 2025');
+        }
+        
+        console.warn = function(...args) {
+          const message = args.join(' ');
+          if (shouldSuppress(message)) return;
+          originalWarn.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+          const message = args.join(' ');
+          if (shouldSuppress(message)) return;
+          originalError.apply(console, args);
+        };
+
+        console.log = function(...args) {
+          const message = args.join(' ');
+          if (shouldSuppress(message)) return;
+          originalLog.apply(console, args);
+        };
+      })();
+    </script>
+    
+    <!-- Google Tag Manager -->
+
+    <!-- End Google Tag Manager -->
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z291GPKR6D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
+
+      gtag('js', new Date());
+
+      // GA4 config + cross-domain
+      gtag('config', 'G-Z291GPKR6D', {
+        send_page_view: true,
+        linker: {
+          domains: ['greatamericanlabor.com', 'www.greatamericanlabor.com']
+        }
+      });
+    </script>
+
+    <title>Great American Labor</title>
+    <link rel="icon" type="image/png" href="/galc-tab-image.png">
+
+    <!-- Mobile safety styles -->
+    <style>
+      html, body { max-width: 100%; overflow-x: hidden; }
+      img { max-width: 100%; height: auto; }
+      input, select, textarea { font-size: 16px; } /* prevents iOS zoom */
+    </style>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+
+    <!-- End Google Tag Manager (noscript) -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

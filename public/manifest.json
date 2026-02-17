@@ -1,0 +1,23 @@
+{
+  "name": "Community Labor Partnership",
+  "short_name": "CLP",
+  "description": "Hire skilled workers with confidence",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#04193b",
+  "icons": [
+    {
+      "src": "/clp602.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/clp602.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
