@@ -1878,8 +1878,7 @@ onMouseEnter={() => setActiveIndex(6)}
             )}
           </div>
 
-
-          {/* Coupon Code Section */}
+          {/* Coupon Code Section 
           <div className="mt-12">
             <label className="block text-sm font-semibold text-[#04193b]/80 mb-4">
               Coupon Code (Optional)
@@ -1939,6 +1938,7 @@ onMouseEnter={() => setActiveIndex(6)}
               <div className="text-green-600 text-sm mt-2">Coupon applied! Discount will be shown in the cost breakdown below.</div>
             )}
           </div>
+          */}
 
           {/* Minimal Cost Estimate */}
           <CostBreakdown 
