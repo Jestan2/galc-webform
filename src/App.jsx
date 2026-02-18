@@ -29,8 +29,129 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyBlDTlWxI4FlQcEneGGKZyw5GyFa_1cOLM";
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 
+// ---------- Helpers for URL params ----------
 
+function parseDateParam(dateStr) {
+  // Expect YYYY-MM-DD
+  if (!dateStr) return null;
+  const m = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
 
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+
+  // Validate real calendar date
+  const test = new Date(y, mo - 1, d);
+  if (
+    test.getFullYear() !== y ||
+    test.getMonth() !== mo - 1 ||
+    test.getDate() !== d
+  ) return null;
+
+  // Don’t allow past dates (local)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const picked = new Date(y, mo - 1, d);
+  picked.setHours(0, 0, 0, 0);
+  if (picked < today) return null;
+
+  return { y, mo, d };
+}
+
+function parseTimeParam(raw) {
+  if (!raw) return null;
+
+  let s = decodeURIComponent(String(raw)).trim().toLowerCase();
+  s = s.replace(/\s+/g, ""); // remove spaces: "8 am" -> "8am"
+
+  // 8am, 8:15am, 12pm, etc.
+  const ampm = s.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)$/);
+  if (ampm) {
+    let h = Number(ampm[1]);
+    let m = ampm[2] ? Number(ampm[2]) : 0;
+    const ap = ampm[3];
+
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+    if (h < 1 || h > 12) return null;
+    if (m < 0 || m > 59) return null;
+
+    if (ap === "am") h = h === 12 ? 0 : h;
+    if (ap === "pm") h = h === 12 ? 12 : h + 12;
+
+    return { h, m };
+  }
+
+  // 08:00, 8:00
+  const hhmm = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (hhmm) {
+    const h = Number(hhmm[1]);
+    const m = Number(hhmm[2]);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+    if (h < 0 || h > 23) return null;
+    if (m < 0 || m > 59) return null;
+    return { h, m };
+  }
+
+  // "8" -> 08:00
+  const hh = s.match(/^(\d{1,2})$/);
+  if (hh) {
+    const h = Number(hh[1]);
+    if (!Number.isFinite(h) || h < 0 || h > 23) return null;
+    return { h, m: 0 };
+  }
+
+  return null;
+}
+function buildWithin1HrDateTime(dateStr) {
+  // Base time = now + 1 hour (local)
+  const plus = new Date(Date.now() + 60 * 60 * 1000);
+
+  // Use provided date if valid; otherwise use the date of (now + 1 hour)
+  const parsed = parseDateParam(dateStr);
+  const base = parsed
+    ? new Date(parsed.y, parsed.mo - 1, parsed.d, 0, 0, 0, 0)
+    : new Date(plus.getFullYear(), plus.getMonth(), plus.getDate(), 0, 0, 0, 0);
+
+  // Time = (now + 1 hour), rounded up to next 15 minutes
+  let totalMins = plus.getHours() * 60 + plus.getMinutes();
+  totalMins = Math.ceil(totalMins / 15) * 15;
+
+  // Clamp to dropdown supported window: 06:00 -> 22:00
+  const minMins = 6 * 60;
+  const maxMins = 22 * 60;
+  totalMins = Math.min(Math.max(totalMins, minMins), maxMins);
+
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+
+  base.setHours(h, m, 0, 0);
+  return base;
+}
+
+function buildDateTimeFromParams(dateStr, timeStr) {
+  // Special case: time=within1hr (or a few common variants)
+  const raw = timeStr == null ? "" : decodeURIComponent(String(timeStr)).trim().toLowerCase();
+  const normalized = raw.replace(/\s+/g, "");
+
+  if (["within1hr", "within_1hr", "within1hour", "withinanhour"].includes(normalized)) {
+    // Returns a normal Date object that matches your dropdown constraints
+    return buildWithin1HrDateTime(dateStr);
+  }
+
+  const date = parseDateParam(dateStr);
+  const time = parseTimeParam(timeStr);
+  if (!date || !time) return null;
+
+  // Only allow times your dropdown supports: 6:00 -> 22:00, 15-min increments
+  const totalMins = time.h * 60 + time.m;
+  const minMins = 6 * 60;
+  const maxMins = 22 * 60;
+  if (totalMins < minMins || totalMins > maxMins) return null;
+  if (time.m % 15 !== 0) return null;
+
+  return new Date(date.y, date.mo - 1, date.d, time.h, time.m, 0, 0);
+}
 // ---------- Helpers (pricing mirror, minimal UI) ----------
 function round2(n) {
   return Math.round(n * 100) / 100;
@@ -563,6 +684,47 @@ export default function App() {
     terms_accepted: false,
     coupon_code: "",
   });
+
+  const prefillAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (prefillAppliedRef.current) return;
+    prefillAppliedRef.current = true;
+
+    // Clean URL = no changes
+    const search = window.location.search;
+    if (!search || search === "?") return;
+
+    const params = new URLSearchParams(search);
+
+    const next = {};
+
+    // workers=3 (1..10)
+    const wRaw = params.get("workers");
+    if (wRaw != null) {
+      const w = parseInt(wRaw, 10);
+      if (Number.isFinite(w) && w >= 1 && w <= 10) next.workers = w;
+    }
+
+    // duration=2 (allowed: 2,5,8)
+    const dRaw = params.get("duration");
+    if (dRaw != null) {
+      const d = parseInt(dRaw, 10);
+      if ([2, 5, 8].includes(d)) next.duration = d;
+    }
+
+    // date=YYYY-MM-DD & time=8am / 08:00 / 8:15am
+    const dt = buildDateTimeFromParams(params.get("date"), params.get("time"));
+    if (dt) next.datetime = dt;
+
+    // If nothing valid, do nothing
+    if (Object.keys(next).length === 0) return;
+
+    // Apply without marking fields "touched" (keeps behavior clean)
+    setValues((v) => ({ ...v, ...next }));
+  }, []);
+
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [clientSecret, setClientSecret] = useState(null);
