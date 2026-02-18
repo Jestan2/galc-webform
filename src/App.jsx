@@ -1780,7 +1780,7 @@ const validate = useCallback(async (vals) => {
             </div>
           )}
 
-{/*
+{/* TOOLS SECTION - Uncomment if you want to offer tools as an add-on service
           <div className="mt-12">
             <label className="block text-sm font-semibold text-[#04193b]/80 mb-4">
               Do you need tools? (+$100)
