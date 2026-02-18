@@ -712,7 +712,7 @@ export default function App() {
     email: "",
     phone: "",
     company_name: "",
-    service: "",
+    service: "Other",
     workers: 1,
     duration: 2,
     datetime: null,
