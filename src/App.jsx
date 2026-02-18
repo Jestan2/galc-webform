@@ -59,6 +59,39 @@ function parseDateParam(dateStr) {
   return { y, mo, d };
 }
 
+function safeDecode(v) {
+  if (v == null) return "";
+  try {
+    return decodeURIComponent(String(v));
+  } catch {
+    return String(v);
+  }
+}
+
+function buildNotesPrefillFromServices(servicesParam, notesParam) {
+  const rawServices = String(servicesParam ?? "").trim();
+  const rawNotes = String(notesParam ?? "").trim();
+
+  if (!rawServices) {
+    return rawNotes ? rawNotes.slice(0, 120) : null;
+  }
+
+  const parts = rawServices
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (!parts.length) return rawNotes ? rawNotes.slice(0, 120) : null;
+
+  const first = parts[0];
+  const task = parts.length > 1 ? `${first} and more` : first;
+
+  let text = `Task: ${task} (add more details here)`;
+  if (rawNotes) text = `${text}\n${rawNotes}`;
+
+  return text.length > 120 ? text.slice(0, 120) : text;
+}
+
 function parseTimeParam(raw) {
   if (!raw) return null;
 
@@ -128,6 +161,14 @@ function buildWithin1HrDateTime(dateStr) {
   base.setHours(h, m, 0, 0);
   return base;
 }
+
+function getParam(params, key) {
+  // URLSearchParams already decodes %xx for you.
+  // This only converts "+" to spaces if someone uses that style.
+  const v = params.get(key);
+  return (v ?? "").replace(/\+/g, " ").trim();
+}
+
 
 function buildDateTimeFromParams(dateStr, timeStr) {
   // Special case: time=within1hr (or a few common variants)
@@ -715,14 +756,28 @@ export default function App() {
     }
 
     // date=YYYY-MM-DD & time=8am / 08:00 / 8:15am
-    const dt = buildDateTimeFromParams(params.get("date"), params.get("time"));
-    if (dt) next.datetime = dt;
+      const dt = buildDateTimeFromParams(params.get("date"), params.get("time"));
+      if (dt) next.datetime = dt;
 
-    // If nothing valid, do nothing
-    if (Object.keys(next).length === 0) return;
+      // ✅ services -> notes template (first service + "and more" if multiple)
+      const servicesStr = getParam(params, "services");
+      const notesStr = getParam(params, "notes");
 
-    // Apply without marking fields "touched" (keeps behavior clean)
-    setValues((v) => ({ ...v, ...next }));
+      const notesPrefill = buildNotesPrefillFromServices(servicesStr, notesStr);
+      if (notesPrefill) next.notes = notesPrefill;
+
+      // If nothing valid, do nothing
+      if (Object.keys(next).length === 0) return;
+
+      // Apply without marking fields "touched" (keeps behavior clean)
+      setValues((v) => {
+        // don't overwrite notes if the user already typed something
+        if (next.notes && v.notes?.trim()) {
+          const { notes, ...rest } = next;
+          return { ...v, ...rest };
+        }
+        return { ...v, ...next };
+      });
   }, []);
 
   const [errors, setErrors] = useState({});
@@ -1725,8 +1780,7 @@ const validate = useCallback(async (vals) => {
             </div>
           )}
 
-
-          {/* Tools */}
+{/*
           <div className="mt-12">
             <label className="block text-sm font-semibold text-[#04193b]/80 mb-4">
               Do you need tools? (+$100)
@@ -1791,7 +1845,7 @@ const validate = useCallback(async (vals) => {
             )}
           </div>
 
-
+*/}
                     {/* Notes */}
           <div className="mb-2"
 onMouseEnter={() => setActiveIndex(6)}
